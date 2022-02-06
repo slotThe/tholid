@@ -1,0 +1,54 @@
+module Parser (read) where
+
+import Prelude hiding (read)
+import Types
+import Util
+
+import qualified Data.Text                  as T
+import qualified Text.Megaparsec            as P
+import qualified Text.Megaparsec.Char       as P
+import qualified Text.Megaparsec.Char.Lexer as L
+import Data.Char (isSpace)
+
+
+type Parser = P.Parsec Void Text
+
+read :: Text -> [Expr]
+read = fromRight [ENil] . P.parse (pExpr `P.sepBy` space) ""
+
+inList :: Parser p -> Parser p
+inList p = symbol "(" *> p <* symbol ")"
+
+pExpr :: Parser Expr
+pExpr = P.try pNil <|> pSymbol <|> pInt <|> pBool <|> pList
+
+pNil :: Parser Expr
+pNil = takeSymbol >>= \s -> guard (s == "nil") $> ENil
+
+pInt :: Parser Expr
+pInt = EInt <$> L.signed space L.decimal
+
+pBool :: Parser Expr
+pBool = EBool <$> (symbol "#t" $> True <|> symbol "#f" $> False)
+
+pSymbol :: Parser Expr
+pSymbol = ESymbol <$> lexeme (T.cons <$> start <*> takeSymbol)
+ where
+  start = P.letterChar <|> P.satisfy (`elem` ("+-_^*/<=>" :: String))
+
+pList :: Parser Expr
+pList = EList <$> inList (pExpr `P.sepBy` space)
+
+takeSymbol :: Parser (P.Tokens Text)
+takeSymbol = P.takeWhileP Nothing $ \a -> not (isSpace a) && a /= '(' && a /= ')'
+
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme space
+
+symbol :: P.Tokens Text -> Parser Text
+symbol = L.symbol space
+
+space :: Parser ()
+space = L.space P.space1
+                (L.skipLineComment ";")
+                empty                    -- no block comments

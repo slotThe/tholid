@@ -1,0 +1,46 @@
+name:                lisp
+version:             0.1.0
+synopsis:            The obligatory lisp interpreter
+license:             GPL-3
+author:              Tony Zorman
+maintainer:          soliditsallgood@mailbox.org
+homepage:            TODO
+
+ghc-options:
+  -Wall
+  -Wcompat
+  -Wincomplete-record-updates
+  -Wincomplete-uni-patterns
+  -Wredundant-constraints
+  -O2
+
+default-extensions:
+  - FlexibleContexts
+  - GADTs
+  - OverloadedStrings
+  - LambdaCase
+  - DerivingStrategies
+  - GeneralizedNewtypeDeriving
+  - BlockArguments
+  - UndecidableInstances
+  - InstanceSigs
+  - ScopedTypeVariables
+  - TupleSections
+
+dependencies:
+  - base
+  - containers
+  - text
+  - transformers
+  - mtl
+  - megaparsec
+  - unliftio
+
+library:
+  source-dirs: src
+
+executables:
+  lisp:
+    source-dirs: app
+    main: Main.hs
+    dependencies: lisp

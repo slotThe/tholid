@@ -1,0 +1,81 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.5.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: a2bd6317e1c15421004683e708b56a6ec9d4ff82a01c8cb7c12956018c1f3033
+
+name:                lisp
+version:             0.1.0
+synopsis:            The obligatory lisp interpreter
+homepage:            TODO
+license:             GPL-3
+license-file:        LICENSE
+author:              Tony Zorman
+maintainer:          soliditsallgood@mailbox.org
+build-type:          Simple
+
+library
+  exposed-modules:
+      Interpreter
+      Parser
+      Run
+      Types
+      Util
+  other-modules:
+      Paths_lisp
+  hs-source-dirs:
+      src
+  default-extensions:
+      FlexibleContexts
+      GADTs
+      OverloadedStrings
+      LambdaCase
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      BlockArguments
+      UndecidableInstances
+      InstanceSigs
+      ScopedTypeVariables
+      TupleSections
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -O2
+  build-depends:
+      base
+    , containers
+    , megaparsec
+    , mtl
+    , text
+    , transformers
+    , unliftio
+  default-language: Haskell2010
+
+executable lisp
+  main-is: Main.hs
+  other-modules:
+      Paths_lisp
+  hs-source-dirs:
+      app
+  default-extensions:
+      FlexibleContexts
+      GADTs
+      OverloadedStrings
+      LambdaCase
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      BlockArguments
+      UndecidableInstances
+      InstanceSigs
+      ScopedTypeVariables
+      TupleSections
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -O2
+  build-depends:
+      base
+    , containers
+    , lisp
+    , megaparsec
+    , mtl
+    , text
+    , transformers
+    , unliftio
+  default-language: Haskell2010
