@@ -6,6 +6,7 @@ module Types (
   Expr (..),
   io,
   modifyContext,
+  insert,
 ) where
 
 import qualified Data.Text as T
@@ -28,18 +29,23 @@ newtype Context a = Context { unContext :: ReaderT (IORef Env) IO a }
     , MonadUnliftIO
     )
 
--- | TODO
+-- | Lift an 'IO' action into the 'Context' monad.
 io :: IO a -> Context a
 io = liftIO
 
+-- | Modify the current environment.
 modifyContext :: (Env -> Env) -> Context ()
 modifyContext f = do
   r <- ask
   modifyIORef' r f
 
--- | TODO
+-- | Return the current environment.
 getEnv :: Context Env
 getEnv = readIORef =<< ask
+
+-- | Insert a new element into an 'Env'.
+insert :: (Text, Expr) -> Env -> Env
+insert kv e = fromList [kv] <> e
 
 -- | Execute a computation with the given local environment.
 locally :: Env -> Context Expr -> Context Expr
@@ -47,7 +53,7 @@ locally env evalThis = do
   e <- newIORef env
   local (const e) evalThis
 
--- | TODO
+-- | A lisp expression.
 data Expr where
   ENil    :: Expr
   EInt    :: Int -> Expr

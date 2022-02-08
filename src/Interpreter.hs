@@ -45,18 +45,18 @@ eval = \case
           _                            -> error "evalBinding"
         evalBindings e = \case
           []       -> pure e
-          (x : xs) -> evalBinding e x >>= \b -> evalBindings (fromList [b] <> e) xs
+          (x : xs) -> evalBinding e x >>= \b -> evalBindings (insert b e) xs
     binds <- evalBindings env bindings
     locally (binds <> env) (eval body)
 
   -- Functions and applications
   EList [ESymbol "define", ESymbol name, EList params, body] -> do
     env <- getEnv
-    let funToEnv = fromList [(name, fun)]  -- tying a tiny knot <3
-        fun      = EFun \args ->
-          locally (funToEnv <> asEnv params args <> env) (eval body)
-    modifyContext (funToEnv <>)
-    pure fun
+    let addFn = (name, fun)                      -- tying a tiny knot <3
+        fun   = EFun \args ->
+          locally (insert addFn (asEnv params args <> env)) (eval body)
+    modifyContext (insert addFn)
+    pure fun                                     -- oh yeah
 
   EList [ESymbol "lambda", EList params, body] -> do
     freeVars <- getEnv
