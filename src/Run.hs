@@ -16,9 +16,11 @@ repl = do
   env <- builtin
   flip runReaderT env . unContext $ forever $ do
     io $ putStr "λ> "
-    s <- head . read <$> liftIO T.getLine
-    e <- eval s `catch` \(e :: SomeException) -> ENil <$ io (print e)
-    io $ print e
+    liftIO T.getLine <&> read >>= \case
+       Left err -> io $ print err
+       Right s  -> do
+         e <- eval (head s) `catch` \(e :: SomeException) -> ENil <$ io (print e)
+         io $ print e
 
 run :: [Expr] -> IO Expr
 run expr = do
@@ -29,5 +31,5 @@ run expr = do
   go (e : es) = eval e >> go es
   go []       = pure ENil
 
-readLisp :: FilePath -> IO [Expr]
+readLisp :: FilePath -> IO (Either String [Expr])
 readLisp fp = read <$> T.readFile fp

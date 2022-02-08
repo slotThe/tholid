@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 module Parser (read) where
 
 import Prelude hiding (read)
@@ -13,8 +14,16 @@ import Data.Char (isSpace)
 
 type Parser = P.Parsec Void Text
 
-read :: Text -> [Expr]
-read = fromRight [ENil] . P.parse (pExpr `P.sepBy` space) ""
+read :: Text -> Either String [Expr]
+read inp = case P.parse (pExpr `P.sepBy` space) "" inp of
+  Left P.ParseErrorBundle{ P.bundlePosState = ps } ->
+    let line = P.sourceLine   $ P.pstateSourcePos ps
+        col  = P.sourceColumn $ P.pstateSourcePos ps
+        expr = P.pstateInput ps
+     in Left $ "Parse error on ("
+            <> show line <> ", " <> show col
+            <> ") in expression " <> T.unpack expr
+  Right exprs -> Right exprs
 
 inList :: Parser p -> Parser p
 inList p = symbol "(" *> p <* symbol ")"
