@@ -18,7 +18,7 @@ import UnliftIO (IORef, MonadUnliftIO, modifyIORef', newIORef, readIORef)
 
 -- | The current environment
 newtype Env = Env { unEnv :: Map Text Expr }
-  deriving newtype (Semigroup, Monoid, IsList)
+  deriving newtype (Semigroup, Monoid, IsList, Show)
 
 -- | Everything happens in a context!
 newtype Context a = Context { unContext :: ReaderT (IORef Env) IO a }
