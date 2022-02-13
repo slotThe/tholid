@@ -14,7 +14,7 @@ import Data.Char (isSpace)
 type Parser = P.Parsec Void Text
 
 read :: Text -> Either String [Expr]
-read inp = case P.parse (pExpr `P.sepBy` space) "" inp of
+read inp = case P.parse (space *> pExpr `P.sepBy` space) "" inp of
   Left P.ParseErrorBundle{ P.bundlePosState = ps } ->
     let line = P.sourceLine   $ P.pstateSourcePos ps
         col  = P.sourceColumn $ P.pstateSourcePos ps
