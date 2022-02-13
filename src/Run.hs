@@ -14,16 +14,18 @@ import UnliftIO.Exception (catch, SomeException)
 repl :: IO ()
 repl = do
   env <- builtin
-  flip runReaderT env . unContext $ forever $ do
-    io $ putStr "λ> "
-    l <- liftIO T.getLine
-    withRead () l \exprs -> do
-      e <- eval (head exprs)
-             `catch` \(e :: SomeException) -> ENil <$ io (print e)
-      io $ print e
+  flip runReaderT env . unContext $ do
+    traverse_ eval =<< io (readLisp prelude)
+    forever do
+      io $ putStr "λ> "
+      l <- liftIO T.getLine
+      withRead () l \exprs -> do
+        e <- eval (head exprs)
+               `catch` \(e :: SomeException) -> ENil <$ io (print e)
+        io $ print e
 
 run :: Text -> IO Expr
-run = runWith "./lisp/prelude.scm"
+run = runWith prelude
 
 runWith :: FilePath -> Text -> IO Expr
 runWith fp input = do
@@ -47,3 +49,6 @@ withRead :: MonadIO m => a -> Text -> ([Expr] -> m a) -> m a
 withRead def str f = case read str of
   Left err     -> def <$ liftIO (print err)
   Right exprs  -> f exprs
+
+prelude :: String
+prelude = "./lisp/prelude.scm"
