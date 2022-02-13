@@ -15,13 +15,7 @@ type Parser = P.Parsec Void Text
 
 read :: Text -> Either String [Expr]
 read inp = case P.parse (space *> pExpr `P.sepBy` space) "" inp of
-  Left P.ParseErrorBundle{ P.bundlePosState = ps } ->
-    let line = P.sourceLine   $ P.pstateSourcePos ps
-        col  = P.sourceColumn $ P.pstateSourcePos ps
-        expr = P.pstateInput ps
-     in Left $ "Parse error on ("
-            <> show line <> ", " <> show col
-            <> ") in expression " <> T.unpack expr
+  Left err    -> Left $ show err
   Right exprs -> Right exprs
 
 inList :: Parser p -> Parser p

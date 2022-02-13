@@ -16,8 +16,10 @@ can use it with [rlwrap]:
 
 # TODO
 
+- [ ] Actual error messages
 - [ ] Actual type checking
 - [ ] Macros
+- [ ] A more robust parser
 
 
 [rlwrap]: https://github.com/hanslub42/rlwrap
