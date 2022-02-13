@@ -16,22 +16,37 @@ repl = do
   env <- builtin
   flip runReaderT env . unContext $ forever $ do
     io $ putStr "λ> "
-    liftIO T.getLine <&> read >>= \case
-       Left err -> io $ print err
-       Right s  -> do
-         e <- eval (head s) `catch` \(e :: SomeException) -> ENil <$ io (print e)
-         io $ print e
+    l <- liftIO T.getLine
+    withRead () l \exprs -> do
+      e <- eval (head exprs)
+             `catch` \(e :: SomeException) -> ENil <$ io (print e)
+      io $ print e
 
 run :: Text -> IO Expr
-run expr = case read expr of
-  Left err    -> ENil <$ print err
-  Right exprs -> do
-    env <- builtin
-    flip runReaderT env . unContext $ go exprs
- where
-  go [e]      = eval e
-  go (e : es) = eval e >> go es
-  go []       = pure ENil
+run = runWith "./lisp/prelude.scm"
 
-readLisp :: FilePath -> IO (Either String [Expr])
-readLisp fp = read <$> T.readFile fp
+runWith :: FilePath -> Text -> IO Expr
+runWith fp input = do
+  fileExprs <- readLisp fp
+  withRead ENil input \exprs -> go (fileExprs <> exprs)
+ where
+  go :: [Expr] -> IO Expr
+  go exprs = do
+    env <- builtin
+    flip runReaderT env . unContext $ evalExprs exprs
+
+  evalExprs :: [Expr] -> Context Expr
+  evalExprs [e]      = eval e
+  evalExprs (e : es) = eval e >> evalExprs es
+  evalExprs []       = pure ENil
+
+
+readLisp :: FilePath -> IO [Expr]
+readLisp fp = do
+  fileContents <- T.readFile fp
+  withRead [ENil] fileContents pure
+
+withRead :: MonadIO m => a -> Text -> ([Expr] -> m a) -> m a
+withRead def str f = case read str of
+  Left err     -> def <$ liftIO (print err)
+  Right exprs  -> f exprs
