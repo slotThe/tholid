@@ -15,6 +15,7 @@ import Data.Functor         as Exports
 import Data.Maybe           as Exports
 import Data.Void            as Exports
 import GHC.Exts             as Exports
+import Control.Arrow        as Exports
 
 import Data.Text (Text)
 

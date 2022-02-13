@@ -19,12 +19,14 @@ eval = \case
   EInt n    -> pure $ EInt n
   EBool b   -> pure $ EBool b
   EList []  -> pure $ EList []
-  ESymbol s -> do
-    getEnv <&> (Map.lookup s . unEnv) >>= \case
+  ESymbol s ->
+    getEnv <&> (unEnv >>> Map.lookup s) >>= \case
       Nothing -> error $ "symbol not found: " <> T.unpack s
       Just s' -> pure s'
 
   -- Control structures
+  EList (ESymbol "quote" : body) -> pure $ EList body
+
   EList [ESymbol "if", cond, then', else'] ->
     ifM (truthy cond) (eval then') (eval else')
 

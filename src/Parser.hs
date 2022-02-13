@@ -1,4 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
 module Parser (read) where
 
 import Prelude hiding (read)
@@ -46,7 +45,13 @@ pSymbol = ESymbol <$> lexeme (T.cons <$> start <*> takeSymbol)
   start = P.letterChar <|> P.satisfy (`elem` ("+-_^*/<=>" :: String))
 
 pList :: Parser Expr
-pList = EList <$> inList (pExpr `P.sepBy` space)
+pList = EList <$> P.choice
+  [ (:) <$> (symbol "'" $> ESymbol "quote") <*> list  -- '(quoted-list)
+  , list
+  ]
+ where
+  list :: Parser [Expr]
+  list = inList (pExpr `P.sepBy` space)
 
 takeSymbol :: Parser (P.Tokens Text)
 takeSymbol = P.takeWhileP Nothing $ \a -> not (isSpace a) && a /= '(' && a /= ')'
