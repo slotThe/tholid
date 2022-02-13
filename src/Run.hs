@@ -22,10 +22,12 @@ repl = do
          e <- eval (head s) `catch` \(e :: SomeException) -> ENil <$ io (print e)
          io $ print e
 
-run :: [Expr] -> IO Expr
-run expr = do
-  env <- builtin
-  flip runReaderT env . unContext $ go expr
+run :: Text -> IO Expr
+run expr = case read expr of
+  Left err    -> ENil <$ print err
+  Right exprs -> do
+    env <- builtin
+    flip runReaderT env . unContext $ go exprs
  where
   go [e]      = eval e
   go (e : es) = eval e >> go es
