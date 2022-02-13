@@ -40,7 +40,7 @@ library:
   source-dirs: src
 
 executables:
-  lisp:
+  tholid:
     source-dirs: app
     main: Main.hs
-    dependencies: lisp
+    dependencies: tholid

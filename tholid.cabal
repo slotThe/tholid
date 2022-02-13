@@ -3,6 +3,8 @@ cabal-version: 1.12
 -- This file has been generated from package.yaml by hpack version 0.34.5.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 3dee0685f7b89cde56fb8b4c9782d4d924f40430c7ad994b2d01e2b05bc1e3b8
 
 name:           tholid
 version:        0.1.0
@@ -48,7 +50,7 @@ library
     , unliftio
   default-language: Haskell2010
 
-executable lisp
+executable tholid
   main-is: Main.hs
   other-modules:
       Paths_tholid
@@ -70,10 +72,10 @@ executable lisp
   build-depends:
       base
     , containers
-    , lisp
     , megaparsec
     , mtl
     , text
+    , tholid
     , transformers
     , unliftio
   default-language: Haskell2010
