@@ -67,8 +67,10 @@ eval = \case
 
   EList (f : xs) -> eval f >>= \case
      EFun        g -> g =<< traverse eval xs
-     ELambda env g -> locally env (g =<< traverse eval xs)
-     _             -> error $ "not a function: " <> show f
+     ELambda env g -> do
+       args <- traverse eval xs
+       locally env (g args)
+     e             -> error $ "not a function or a lambda: " <> show e
 
   _ -> error "eval"
 
