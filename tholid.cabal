@@ -3,18 +3,16 @@ cabal-version: 1.12
 -- This file has been generated from package.yaml by hpack version 0.34.5.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: a2bd6317e1c15421004683e708b56a6ec9d4ff82a01c8cb7c12956018c1f3033
 
-name:                lisp
-version:             0.1.0
-synopsis:            The obligatory lisp interpreter
-homepage:            TODO
-license:             GPL-3
-license-file:        LICENSE
-author:              Tony Zorman
-maintainer:          soliditsallgood@mailbox.org
-build-type:          Simple
+name:           tholid
+version:        0.1.0
+synopsis:       The obligatory lisp interpreter
+homepage:       TODO
+author:         Tony Zorman
+maintainer:     soliditsallgood@mailbox.org
+license:        GPL-3
+license-file:   LICENSE
+build-type:     Simple
 
 library
   exposed-modules:
@@ -24,7 +22,7 @@ library
       Types
       Util
   other-modules:
-      Paths_lisp
+      Paths_tholid
   hs-source-dirs:
       src
   default-extensions:
@@ -53,7 +51,7 @@ library
 executable lisp
   main-is: Main.hs
   other-modules:
-      Paths_lisp
+      Paths_tholid
   hs-source-dirs:
       app
   default-extensions:

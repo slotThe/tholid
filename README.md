@@ -1,4 +1,4 @@
-# lisp
+# tholid
 
 The obligatory lisp interpreter that everyone has to have done at least
 once in their life.
