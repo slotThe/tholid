@@ -4,7 +4,6 @@ module Util (
   ifM,
   (.:),
   foldM1,
-  if',
 ) where
 
 import Control.Applicative  as Exports
@@ -24,11 +23,7 @@ ifM :: Monad m => m Bool -> m b -> m b -> m b
 ifM ma mb mc = ma >>= \a -> if a then mb else mc
 {-# INLINE ifM #-}
 
--- | Like @if-then-else@, but as a function.
-if' :: Bool -> p -> p -> p
-if' i t e = if i then t else e
-
--- | f .: g ≡ (\f g -> (\a b -> f (g a b)))
+-- | f .: g ≡ (\a b -> f (g a b))
 (.:) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 (.:) = (.) . (.)
 
@@ -38,3 +33,4 @@ foldM1 :: Monad m => (a -> a -> m a) -> [a] -> m a
 foldM1 f = \case
   []       -> error "foldM1: empty list"
   (x : xs) -> foldM f x xs
+{-# INLINE foldM1 #-}
