@@ -1,5 +1,6 @@
 module Run (repl, run, readLisp) where
 
+import Builtin
 import Interpreter
 import Parser
 import Prelude hiding (read)
@@ -8,7 +9,7 @@ import Util
 
 import qualified Data.Text.IO as T
 
-import UnliftIO.Exception (catch, SomeException)
+import UnliftIO.Exception (SomeException, catch)
 
 
 repl :: IO ()
