@@ -62,7 +62,7 @@ data Expr where
   EBool   :: Bool -> Expr
   EFun    ::        ([Expr] -> Context Expr) -> Expr
   ELambda :: Env -> ([Expr] -> Context Expr) -> Expr
-             -- ^ 'Env' here are the free variables
+             -- ^ 'Env' here are the free variables at the time of evaluation.
 
 instance Show Expr where
   show :: Expr -> String

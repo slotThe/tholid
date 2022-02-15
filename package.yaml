@@ -16,7 +16,7 @@ ghc-options:
 
 default-extensions:
   - FlexibleContexts
-  - GADTs
+  - GADTSyntax
   - OverloadedStrings
   - LambdaCase
   - DerivingStrategies

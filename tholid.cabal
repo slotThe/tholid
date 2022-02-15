@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a5e33c8c3d7a22bd02461dda946765bb4e1a7745fe62a61ed338932335153b73
+-- hash: 07913fe41fe1b3aa17f08f99331c1685ada182282cb9d42d3b52ee2833691e0b
 
 name:           tholid
 version:        0.1.0
@@ -30,7 +30,7 @@ library
       src
   default-extensions:
       FlexibleContexts
-      GADTs
+      GADTSyntax
       OverloadedStrings
       LambdaCase
       DerivingStrategies
@@ -59,7 +59,7 @@ executable tholid
       app
   default-extensions:
       FlexibleContexts
-      GADTs
+      GADTSyntax
       OverloadedStrings
       LambdaCase
       DerivingStrategies
