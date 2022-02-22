@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 07913fe41fe1b3aa17f08f99331c1685ada182282cb9d42d3b52ee2833691e0b
+-- hash: b99eb792b7b5a98e18146451eb9b62d22451514db364426daae06e7ea480421b
 
 name:           tholid
 version:        0.1.0
@@ -29,6 +29,7 @@ library
   hs-source-dirs:
       src
   default-extensions:
+      ImportQualifiedPost
       FlexibleContexts
       GADTSyntax
       OverloadedStrings
@@ -40,7 +41,7 @@ library
       InstanceSigs
       ScopedTypeVariables
       TupleSections
-  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -O2
+  ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisationsa -Wno-unsafe -O2
   build-depends:
       base
     , containers
@@ -58,6 +59,7 @@ executable tholid
   hs-source-dirs:
       app
   default-extensions:
+      ImportQualifiedPost
       FlexibleContexts
       GADTSyntax
       OverloadedStrings
@@ -69,7 +71,7 @@ executable tholid
       InstanceSigs
       ScopedTypeVariables
       TupleSections
-  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -O2
+  ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisationsa -Wno-unsafe -O2
   build-depends:
       base
     , containers

@@ -4,10 +4,10 @@ import Prelude hiding (read)
 import Types
 import Util
 
-import qualified Data.Text                  as T
-import qualified Text.Megaparsec            as P
-import qualified Text.Megaparsec.Char       as P
-import qualified Text.Megaparsec.Char.Lexer as L
+import Data.Text                  qualified as T
+import Text.Megaparsec            qualified as P
+import Text.Megaparsec.Char       qualified as P
+import Text.Megaparsec.Char.Lexer qualified as L
 
 import Data.Char (isSpace)
 import Text.Megaparsec ((<?>))
@@ -38,6 +38,7 @@ pBool = EBool <$> (symbol "#t" $> True <|> symbol "#f" $> False) <?> "boolean"
 pSymbol :: Parser Expr
 pSymbol = ESymbol <$> lexeme (T.cons <$> start <*> takeSymbol) <?> "symbol"
  where
+  start :: Parser Char
   start = P.letterChar <|> P.satisfy (`elem` ("+-_^*/<=>" :: String))
 
 pList :: Parser Expr

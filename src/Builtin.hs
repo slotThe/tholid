@@ -51,6 +51,7 @@ eq _ _ = pure $ EBool False
 lt :: [Expr] -> Context Bool
 lt = go
  where
+  go :: [Expr] -> Context Bool
   go = \case
     (EInt x : EInt y : xs) -> ((x < y) &&) <$> go xs
     [_]                    -> pure True

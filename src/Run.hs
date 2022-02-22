@@ -7,7 +7,7 @@ import Prelude hiding (read)
 import Types
 import Util
 
-import qualified Data.Text.IO as T
+import Data.Text.IO qualified as T
 
 import UnliftIO.Exception (SomeException, catch)
 

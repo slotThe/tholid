@@ -9,7 +9,7 @@ module Types (
   insert,
 ) where
 
-import qualified Data.Text as T
+import Data.Text qualified as T
 
 import Data.Map.Strict (Map)
 import Prelude hiding (read)
