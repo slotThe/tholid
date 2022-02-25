@@ -11,7 +11,7 @@ can use it with [rlwrap]:
 
 ``` console
   $ stack build
-  $ rlwrap stack exec -- lisp
+  $ rlwrap stack exec -- tholid
 ```
 
 # TODO
