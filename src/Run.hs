@@ -9,6 +9,7 @@ import Util
 
 import Data.Text.IO qualified as T
 
+import System.IO (hFlush, stdout)
 import UnliftIO.Exception (SomeException, catch)
 
 
@@ -18,7 +19,7 @@ repl = do
   flip runReaderT env . unContext $ do
     traverse_ eval =<< io (readLisp prelude)
     forever do
-      io $ putStr "λ> "
+      io $ putStr "λ> " >> hFlush stdout
       l <- liftIO T.getLine
       withRead () l \exprs -> do
         e <- eval (head exprs)

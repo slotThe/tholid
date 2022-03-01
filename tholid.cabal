@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b99eb792b7b5a98e18146451eb9b62d22451514db364426daae06e7ea480421b
+-- hash: 799d2116ad12a38f0a573f192dee5cf8ecd7465456422b65c9fe5e3165472351
 
 name:           tholid
 version:        0.1.0
@@ -41,7 +41,7 @@ library
       InstanceSigs
       ScopedTypeVariables
       TupleSections
-  ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisationsa -Wno-unsafe -O2
+  ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisations -Wno-unsafe -O2
   build-depends:
       base
     , containers
@@ -71,7 +71,7 @@ executable tholid
       InstanceSigs
       ScopedTypeVariables
       TupleSections
-  ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisationsa -Wno-unsafe -O2
+  ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisations -Wno-unsafe -O2
   build-depends:
       base
     , containers
