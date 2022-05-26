@@ -25,6 +25,8 @@ eval = \case
   -- Control structures
   EList (ESymbol "quote" : body) -> pure $ EList body
 
+  EList (ESymbol "syntax-quote" : body) -> EList <$> traverse unquote body
+
   EList [ESymbol "if", cond, then', else'] ->
     ifM (truthy cond) (eval then') (eval else')
 
@@ -71,6 +73,11 @@ eval = \case
      e             -> error $ "not a function or a lambda: " <> show e
 
   _ -> error "eval"
+
+unquote :: Expr -> Context Expr
+unquote = \case
+  EList [ESymbol ",", body] -> eval body
+  donteval                  -> pure donteval
 
 asEnv :: [Expr] -> [Expr] -> Env
 asEnv = fromList .: zipWith (\(ESymbol a) b -> (a, b))

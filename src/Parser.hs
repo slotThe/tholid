@@ -24,7 +24,7 @@ inList :: Parser p -> Parser p
 inList p = symbol "(" *> p <* symbol ")"
 
 pExpr :: Parser Expr
-pExpr = P.try pNil <|> pSymbol <|> pInt <|> pBool <|> pList
+pExpr = P.try pNil <|> pSymbol <|> pInt <|> pBool <|> pList <|> pUnquote
 
 pNil :: Parser Expr
 pNil = takeSymbol >>= \s -> guard (s == "nil") $> ENil <?> "nil"
@@ -35,6 +35,10 @@ pInt = EInt <$> L.signed space L.decimal <?> "integer"
 pBool :: Parser Expr
 pBool = EBool <$> (symbol "#t" $> True <|> symbol "#f" $> False) <?> "boolean"
 
+pUnquote :: Parser Expr
+pUnquote = fmap EList $ (\a b -> [a, b]) <$> (symbol "," $> ESymbol ",")
+                                         <*> pExpr
+
 pSymbol :: Parser Expr
 pSymbol = ESymbol <$> lexeme (T.cons <$> start <*> takeSymbol) <?> "symbol"
  where
@@ -42,13 +46,17 @@ pSymbol = ESymbol <$> lexeme (T.cons <$> start <*> takeSymbol) <?> "symbol"
   start = P.letterChar <|> P.satisfy (`elem` ("+-_^*/<=>" :: String))
 
 pList :: Parser Expr
-pList = EList <$> P.choice
-  [ (:) <$> (symbol "'" $> ESymbol "quote") <*> list  -- '(quoted-list)
-  , list
-  ] <?> "list"
+pList = pQuote "'" "quote"        "list"
+    <|> pQuote "`" "syntax-quote" "backquoted list"
  where
-  list :: Parser [Expr]
-  list = inList (pExpr `P.sepBy` space)
+  pQuote :: P.Tokens Text -> Text -> String -> Parser Expr
+  pQuote sym tok help = EList <$> P.choice
+    [ (:) <$> (symbol sym $> ESymbol tok) <*> list  -- `(syntax-quote)
+    , list
+    ] <?> help
+   where
+    list :: Parser [Expr]
+    list = inList (pExpr `P.sepBy` space)
 
 takeSymbol :: Parser (P.Tokens Text)
 takeSymbol = P.takeWhileP Nothing $ \a -> not (isSpace a) && a /= '(' && a /= ')'
