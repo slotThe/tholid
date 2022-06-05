@@ -61,6 +61,7 @@ data Expr where
   EList   :: [Expr] -> Expr
   EBool   :: Bool -> Expr
   EFun    ::        ([Expr] -> Context Expr) -> Expr
+  EMacro  ::        ([Expr] -> Context Expr) -> Expr
   ELambda :: Env -> ([Expr] -> Context Expr) -> Expr
              -- ^ 'Env' here are the free variables at the time of evaluation.
 
@@ -72,5 +73,6 @@ instance Show Expr where
     ESymbol t -> T.unpack t
     EList xs  -> "(" <> unwords (map show xs) <> ")"
     EBool b   -> if b then "#t" else "#f"
-    ELambda{} -> "<lambda>"
-    EFun{}    -> "<function>"
+    ELambda{} -> "≪lambda≫"
+    EFun{}    -> "≪function≫"
+    EMacro{}  -> "≪macro≫"

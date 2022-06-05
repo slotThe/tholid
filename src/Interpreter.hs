@@ -51,14 +51,12 @@ eval = \case
     binds <- evalBindings env bindings
     locally (binds <> env) (eval body)
 
-  -- Functions and applications
-  EList [ESymbol "define", ESymbol name, EList params, body] -> do
-    env <- getEnv
-    let addFn = (name, fun)                      -- tying a tiny knot <3
-        fun   = EFun \args ->
-          locally (insert addFn (asEnv params args <> env)) (eval body)
-    modifyContext (insert addFn)
-    pure fun                                     -- oh yeah
+  -- Macros, functions, and applications
+  EList [ESymbol "define-syntax", ESymbol name, EList params, body] ->
+    funOrMacro EMacro name params body (eval <=< eval)
+
+  EList [ESymbol "define", ESymbol name, EList params, body] ->
+    funOrMacro EFun name params body eval
 
   EList [ESymbol "lambda", EList params, body] -> do
     freeVars <- getEnv
@@ -66,6 +64,7 @@ eval = \case
       locally (asEnv params args <> freeVars) (eval body)
 
   EList (f : xs) -> eval f >>= \case
+     EMacro      g -> g =<< traverse eval xs
      EFun        g -> g =<< traverse eval xs
      ELambda env g -> do
        args <- traverse eval xs
@@ -73,6 +72,19 @@ eval = \case
      e             -> error $ "not a function or a lambda: " <> show e
 
   _ -> error "eval"
+ where
+  funOrMacro
+    :: (([Expr] -> Context Expr) -> Expr)
+    -> Text -> [Expr]
+    -> p -> (p -> Context Expr)
+    -> Context Expr
+  funOrMacro funType name params body ev = do
+    env <- getEnv
+    let addFn = (name, fun)                      -- tying a tiny knot <3
+        fun   = funType \args ->
+          locally (insert addFn (asEnv params args <> env)) (ev body)
+    modifyContext (insert addFn)
+    pure fun                                     -- oh yeah
 
 unquote :: Expr -> Context Expr
 unquote = \case
