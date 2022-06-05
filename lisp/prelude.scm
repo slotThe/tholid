@@ -1,3 +1,14 @@
+;; Essential
+
+(define id (x)
+  x)
+
+(define not (x)
+  (if x nil #t))
+
+(define-syntax when (cnd bdy)
+  `(if ,cnd ,body nil))
+
 ;; Arithmetic
 
 (define inc (x)
@@ -9,16 +20,18 @@
 ;; List utilities
 
 (define empty? (xs)
-  (= nil (car xs)))
-
-(define map (f xs)
-  (if (empty? xs)
-      '()
-      (cons (f (car xs))
-            (map f (cdr xs)))))
+  (= nil (cdr xs)))
 
 (define foldr (f def xs)
   (if (empty? xs)
       def
       (f (car xs)
          (foldr f def (cdr xs)))))
+
+(define map (f xs)
+  (foldr (lambda (a b) (cons (f a) b))
+         '() xs))
+
+(define filter (f xs)
+  (foldr (lambda (a b) (if (f a) (cons a b) b))
+         '() xs))
