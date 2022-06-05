@@ -14,12 +14,4 @@ can use it with [rlwrap]:
   $ rlwrap stack exec -- tholid
 ```
 
-# TODO
-
-- [ ] Actual error messages
-- [ ] Actual type checking
-- [ ] Macros
-- [ ] A more robust parser
-
-
 [rlwrap]: https://github.com/hanslub42/rlwrap

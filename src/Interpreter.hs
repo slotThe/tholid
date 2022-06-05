@@ -27,8 +27,8 @@ eval = \case
 
   EList (ESymbol "syntax-quote" : body) -> EList . concat <$> traverse unquote body
 
-  EList [ESymbol "if", cond, then', else'] ->
-    ifM (truthy cond) (eval then') (eval else')
+  EList (ESymbol "if" : cond : then' : else') ->
+    ifM (truthy cond) (eval then') (eval $ exprHead else')
 
   EList (ESymbol "cond" : clauses) -> do
     let evalCondition :: Expr -> Context (Maybe Expr)

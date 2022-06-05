@@ -7,6 +7,7 @@ module Types (
   io,
   modifyContext,
   insert,
+  exprHead,
 ) where
 
 import Data.Text qualified as T
@@ -52,6 +53,10 @@ locally :: Env -> Context Expr -> Context Expr
 locally env evalThis = do
   e <- newIORef env
   local (const e) evalThis
+
+-- | Get the head of a list of expressions, or nil.
+exprHead :: [Expr] -> Expr
+exprHead = fromMaybe ENil . listToMaybe
 
 -- | A lisp expression.
 data Expr where

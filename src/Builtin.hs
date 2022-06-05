@@ -1,4 +1,7 @@
-module Builtin (builtin) where
+module Builtin (
+  builtin,
+  progn,
+) where
 
 import Interpreter
 import Types
@@ -9,8 +12,10 @@ import Data.IORef
 
 builtin :: IO (IORef Env)
 builtin = newIORef $ fromList
-  [ -- arithmetic
-    ("+"   , EFun $ nAryOp foldl' 0 (+))
+  [ -- essential
+    ("progn", EFun progn)
+    -- arithmetic
+  , ("+"   , EFun $ nAryOp foldl' 0 (+))
   , ("-"   , EFun $ nAryOp foldr  0 (-))
   , ("*"   , EFun $ nAryOp foldl' 1 (*))
   , ("/"   , EFun $ nAryOp foldr  1 div)
@@ -74,3 +79,6 @@ consList :: [Expr] -> Context Expr
 consList = \case
   [a, EList xs] -> pure $ EList (a : xs)
   e             -> error $ "cons: " <> show e
+
+progn :: [Expr] -> Context Expr
+progn = fmap (exprHead . reverse) . traverse eval

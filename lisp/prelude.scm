@@ -6,8 +6,8 @@
 (define not (x)
   (if x nil #t))
 
-(define-syntax when (cnd bdy)
-  `(if ,cnd ,body nil))
+(define-syntax when (this body)
+  `(if ,this (progn ,@body)))
 
 ;; Arithmetic
 

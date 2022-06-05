@@ -37,10 +37,7 @@ runWith fp input = do
   go :: [Expr] -> IO Expr
   go exprs = do
     env <- builtin
-    flip runReaderT env . unContext $ evalExprs exprs
-
-  evalExprs :: [Expr] -> Context Expr
-  evalExprs = fmap (fromMaybe ENil . listToMaybe) . traverse eval
+    flip runReaderT env . unContext $ progn exprs
 
 readLisp :: FilePath -> IO [Expr]
 readLisp fp = do
