@@ -77,6 +77,7 @@ eval = \case
 unquote :: Expr -> Context Expr
 unquote = \case
   EList [ESymbol ",", body] -> eval body
+  EList body                -> EList <$> traverse unquote body
   donteval                  -> pure donteval
 
 asEnv :: [Expr] -> [Expr] -> Env
