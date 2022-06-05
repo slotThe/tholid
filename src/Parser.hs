@@ -36,8 +36,11 @@ pBool :: Parser Expr
 pBool = EBool <$> (symbol "#t" $> True <|> symbol "#f" $> False) <?> "boolean"
 
 pUnquote :: Parser Expr
-pUnquote = fmap EList $ (\a b -> [a, b]) <$> (symbol "," $> ESymbol ",")
-                                         <*> pExpr
+pUnquote = fmap EList $
+  (\a b -> [a, b]) <$> (   symbol ",@" $> ESymbol ",@"
+                       <|> symbol ","  $> ESymbol ","
+                       )
+                   <*> pExpr
 
 pSymbol :: Parser Expr
 pSymbol = ESymbol <$> lexeme (T.cons <$> start <*> takeSymbol) <?> "symbol"

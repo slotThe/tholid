@@ -25,7 +25,7 @@ eval = \case
   -- Control structures
   EList (ESymbol "quote" : body) -> pure $ EList body
 
-  EList (ESymbol "syntax-quote" : body) -> EList <$> traverse unquote body
+  EList (ESymbol "syntax-quote" : body) -> EList . concat <$> traverse unquote body
 
   EList [ESymbol "if", cond, then', else'] ->
     ifM (truthy cond) (eval then') (eval else')
@@ -52,11 +52,15 @@ eval = \case
     locally (binds <> env) (eval body)
 
   -- Macros, functions, and applications
-  EList [ESymbol "define-syntax", ESymbol name, EList params, body] ->
-    funOrMacro EMacro name params body (eval <=< eval)
+  EList [ESymbol "define-syntax", ESymbol name, EList params, body] -> do
+    funOrMacro name $ \addFn env ->
+      EMacro \args -> do
+        let doLocal = locally (insert addFn (asEnv params args <> env))
+        doLocal . eval <=< doLocal . eval $ body  -- it's a double eval!
 
-  EList [ESymbol "define", ESymbol name, EList params, body] ->
-    funOrMacro EFun name params body eval
+  EList [ESymbol "define", ESymbol name, EList params, body] -> do
+    funOrMacro name $ \addFn env ->
+      EFun \args -> locally (insert addFn (asEnv params args <> env)) (eval body)
 
   EList [ESymbol "lambda", EList params, body] -> do
     freeVars <- getEnv
@@ -73,24 +77,22 @@ eval = \case
 
   _ -> error "eval"
  where
-  funOrMacro
-    :: (([Expr] -> Context Expr) -> Expr)
-    -> Text -> [Expr]
-    -> p -> (p -> Context Expr)
-    -> Context Expr
-  funOrMacro funType name params body ev = do
+  funOrMacro :: Text -> ((Text, Expr) -> Env -> Expr) -> Context Expr
+  funOrMacro name execute = do
     env <- getEnv
-    let addFn = (name, fun)                      -- tying a tiny knot <3
-        fun   = funType \args ->
-          locally (insert addFn (asEnv params args <> env)) (ev body)
+    let addFn = (name, fun)       -- tying a tiny knot <3
+        fun   = execute addFn env
     modifyContext (insert addFn)
-    pure fun                                     -- oh yeah
+    pure fun                      -- oh yeah
 
-unquote :: Expr -> Context Expr
+unquote :: Expr -> Context [Expr]
 unquote = \case
-  EList [ESymbol ",", body] -> eval body
-  EList body                -> EList <$> traverse unquote body
-  donteval                  -> pure donteval
+  EList [ESymbol "," , body] -> traverse eval [body]
+  EList [ESymbol ",@", body] -> eval body >>= \case
+    EList xs -> pure xs
+    _        -> pure [body]
+  EList body                 -> (:[]) . EList . concat <$> traverse unquote body
+  donteval                   -> pure [donteval]
 
 asEnv :: [Expr] -> [Expr] -> Env
 asEnv = fromList .: zipWith (\(ESymbol a) b -> (a, b))
