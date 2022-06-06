@@ -19,7 +19,7 @@ ghc-options:
 default-extensions:
   - ImportQualifiedPost
   - FlexibleContexts
-  - GADTSyntax
+  - GADTs
   - OverloadedStrings
   - LambdaCase
   - DerivingStrategies
@@ -29,6 +29,9 @@ default-extensions:
   - InstanceSigs
   - ScopedTypeVariables
   - TupleSections
+  - StandaloneKindSignatures
+  - ConstraintKinds
+  - RankNTypes
 
 dependencies:
   - base
@@ -37,7 +40,6 @@ dependencies:
   - transformers
   - mtl
   - megaparsec
-  - unliftio
 
 library:
   source-dirs: src

@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.5.
+-- This file has been generated from package.yaml by hpack version 0.34.6.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 799d2116ad12a38f0a573f192dee5cf8ecd7465456422b65c9fe5e3165472351
+-- hash: d203ceb3f7893edb06f75ef9495eec4c04c563e218873e087891bc94d6e9d9ad
 
 name:           tholid
 version:        0.1.0
@@ -31,7 +31,7 @@ library
   default-extensions:
       ImportQualifiedPost
       FlexibleContexts
-      GADTSyntax
+      GADTs
       OverloadedStrings
       LambdaCase
       DerivingStrategies
@@ -41,6 +41,9 @@ library
       InstanceSigs
       ScopedTypeVariables
       TupleSections
+      StandaloneKindSignatures
+      ConstraintKinds
+      RankNTypes
   ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisations -Wno-unsafe -O2
   build-depends:
       base
@@ -49,7 +52,6 @@ library
     , mtl
     , text
     , transformers
-    , unliftio
   default-language: Haskell2010
 
 executable tholid
@@ -61,7 +63,7 @@ executable tholid
   default-extensions:
       ImportQualifiedPost
       FlexibleContexts
-      GADTSyntax
+      GADTs
       OverloadedStrings
       LambdaCase
       DerivingStrategies
@@ -71,6 +73,9 @@ executable tholid
       InstanceSigs
       ScopedTypeVariables
       TupleSections
+      StandaloneKindSignatures
+      ConstraintKinds
+      RankNTypes
   ghc-options: -Weverything -Wno-implicit-prelude -Wno-missing-import-lists -Wno-unused-packages -Wno-missing-safe-haskell-mode -Wno-all-missed-specialisations -Wno-unsafe -O2
   build-depends:
       base
@@ -80,5 +85,4 @@ executable tholid
     , text
     , tholid
     , transformers
-    , unliftio
   default-language: Haskell2010

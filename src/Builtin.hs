@@ -7,7 +7,8 @@ import Interpreter
 import Types
 import Util
 
-import Data.IORef
+import Control.Monad.Except (MonadError, throwError)
+import Data.IORef (IORef, newIORef)
 
 
 builtin :: IO (IORef Env)
@@ -15,15 +16,15 @@ builtin = newIORef $ fromList
   [ -- essential
     ("progn", EFun progn)
     -- arithmetic
-  , ("+"   , EFun $ nAryOp foldl' 0 (+))
-  , ("-"   , EFun $ nAryOp foldr  0 (-))
-  , ("*"   , EFun $ nAryOp foldl' 1 (*))
-  , ("/"   , EFun $ nAryOp foldr  1 div)
+  , ("+"   , EFun $ nAryOp "+" foldl' 0 (+))
+  , ("-"   , EFun $ nAryOp "-" foldr  0 (-))
+  , ("*"   , EFun $ nAryOp "*" foldl' 1 (*))
+  , ("/"   , EFun $ nAryOp "/" foldr  1 div)
     -- comparisons
-  , ("^"   , EFun $ nAryOp foldr  1 (^)    )
-  , ("<"   , EFun $ fmap EBool         . lt)
-  , (">"   , EFun $ fmap (EBool . not) . lt)
-  , ("="   , EFun $ foldM1 eq              )
+  , ("^"   , EFun $ nAryOp "^" foldr  1 (^)    )
+  , ("<"   , EFun $ fmap EBool         . lt "<")
+  , (">"   , EFun $ fmap (EBool . not) . lt ">")
+  , ("="   , EFun $ foldM1 eq                  )
     -- list primitives
   , ("list", EFun $ pure . EList)
   , ("car" , EFun car           )
@@ -31,19 +32,16 @@ builtin = newIORef $ fromList
   , ("cons", EFun consList      )
   ]
 
-nAryOp :: Applicative f => (a -> b -> [Int] -> Int) -> b -> a -> [Expr] -> f Expr
-nAryOp cata def op xs
-  | length xs == length allNumbers = pure . EInt . cata op def $ allNumbers
-  | otherwise                      = error "nAryOp"
+nAryOp :: forall a b m. MonadError TholidError m
+       => Text -> (a -> b -> [Int] -> Int) -> b -> a -> [Expr] -> m Expr
+nAryOp opName cata def op xs = EInt . cata op def <$> traverse unNumber xs
  where
-  allNumbers = mapMaybe unNumber xs
+  unNumber :: Expr -> m Int
+  unNumber expr = case expr of
+    EInt n -> pure n
+    _      -> throwError $ BuiltinTypeError opName "number" expr
 
-  unNumber :: Expr -> Maybe Int
-  unNumber = \case
-    EInt n -> Just n
-    _      -> Nothing
-
-eq :: Expr -> Expr -> Context Expr
+eq :: MonadContext m => Expr -> Expr -> m Expr
 eq (EInt x)    (EInt y)    = pure . EBool $ x == y
 eq (ESymbol x) (ESymbol y) = pure . EBool $ x == y
 eq (EBool x)   (EBool y)   = pure . EBool $ x == y
@@ -53,32 +51,32 @@ eq (EList xs)  (EList ys)  = do
   EBool . and <$> traverse (fmap (True ==) . truthy) res
 eq _ _ = pure $ EBool False
 
-lt :: [Expr] -> Context Bool
-lt = go
+lt :: MonadContext m => Text -> [Expr] -> m Bool
+lt opName = go
  where
-  go :: [Expr] -> Context Bool
+  go :: MonadContext m => [Expr] -> m Bool
   go = \case
     (EInt x : EInt y : xs) -> ((x < y) &&) <$> go xs
     [_]                    -> pure True
     []                     -> pure True
-    e                      -> error $ "lt: " <> show e
+    e                      -> throwError $ BuiltinTypeError opName "(list of) number(s)" e
 
-car :: [Expr] -> Context Expr
+car :: MonadContext m => [Expr] -> m Expr
 car = \case
   [EList (x : _)] -> pure x
   [EList{}]       -> pure ENil
-  e               -> error $ "car:" <> show e
+  e               -> throwError $ BuiltinTypeError "car" "list" e
 
-cdr :: [Expr] -> Context Expr
+cdr :: MonadContext m => [Expr] -> m Expr
 cdr = \case
   [EList (_ : xs)] -> pure (EList xs)
   [EList {}]       -> pure ENil
-  e                -> error $ "cdr: " <> show e
+  e                -> throwError $ BuiltinTypeError "cdr" "list" e
 
-consList :: [Expr] -> Context Expr
+consList :: MonadContext m => [Expr] -> m Expr
 consList = \case
   [a, EList xs] -> pure $ EList (a : xs)
-  e             -> error $ "cons: " <> show e
+  e             -> throwError $ BuiltinTypeError "cons" "element followed by list" e
 
-progn :: [Expr] -> Context Expr
+progn :: MonadContext m => [Expr] -> m Expr
 progn = fmap (exprHead . reverse) . traverse eval

@@ -9,22 +9,22 @@ import Util
 
 import Data.Text.IO qualified as T
 
+import Control.Exception (SomeException, catch, throwIO)
+import Control.Monad.Except (runExceptT)
 import System.IO (hFlush, stdout)
-import UnliftIO.Exception (SomeException, catch)
-
 
 repl :: IO ()
 repl = do
   env <- builtin
-  flip runReaderT env . unContext $ do
+  void . flip runReaderT env . runExceptT . unContext $ do
     traverse_ eval =<< io (readLisp prelude)
     forever do
       io $ putStr "λ> " >> hFlush stdout
       l <- liftIO T.getLine
-      withRead () l \exprs -> do
-        e <- eval (head exprs)
-               `catch` \(e :: SomeException) -> ENil <$ io (print e)
-        io $ print e
+      liftIO $ withRead () l \exprs ->
+        either print print
+          =<< (flip runReaderT env . runExceptT . unContext . eval $ head exprs)
+                `catch` \(e :: SomeException) -> Right ENil <$ print e
 
 run :: Text -> IO Expr
 run = runWith prelude
@@ -37,7 +37,9 @@ runWith fp input = do
   go :: [Expr] -> IO Expr
   go exprs = do
     env <- builtin
-    flip runReaderT env . unContext $ progn exprs
+    (flip runReaderT env . runExceptT . unContext $ progn exprs) >>= \case
+       Left  e    -> throwIO e
+       Right expr -> pure expr
 
 readLisp :: FilePath -> IO [Expr]
 readLisp fp = do

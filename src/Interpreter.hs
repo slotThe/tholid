@@ -6,11 +6,12 @@ module Interpreter (
 import Types
 import Util
 
+import Control.Monad.Except (throwError)
 import Data.Map.Strict qualified as Map
-import Data.Text       qualified as T
 
 
-eval :: Expr -> Context Expr
+{-# SPECIALISE eval :: Expr -> Context Expr #-}
+eval :: forall context. MonadContext context => Expr -> context Expr
 eval = \case
   -- Trivial stuff
   ENil      -> pure ENil
@@ -19,7 +20,7 @@ eval = \case
   EList []  -> pure $ EList []
   ESymbol s ->
     getEnv <&> (unEnv >>> Map.lookup s) >>= \case
-      Nothing -> error $ "symbol not found: " <> T.unpack s
+      Nothing -> throwError $ SymbolNotInScope s
       Just s' -> pure s'
 
   -- Control structures
@@ -31,20 +32,22 @@ eval = \case
     ifM (truthy cond) (eval then') (eval $ exprHead else')
 
   EList (ESymbol "cond" : clauses) -> do
-    let evalCondition :: Expr -> Context (Maybe Expr)
+    let evalCondition :: Expr -> context (Maybe Expr)
         evalCondition = \case
           EList [i, t] -> ifM (truthy i) (Just <$> eval t) (pure Nothing)
-          _            -> error "cond's arguments should be lists of two elements"
-        genCond :: [Expr] -> Context Expr
+          _            -> throwError $ CustomError "cond's arguments should be lists of two elements."
+        genCond :: [Expr] -> context Expr
         genCond []       = pure ENil
         genCond (x : xs) = evalCondition x >>= maybe (genCond xs) pure
     genCond clauses
 
   EList [ESymbol "let", EList bindings, body] -> do
     env <- getEnv
-    let evalBinding e = \case
+    let evalBinding :: Env -> Expr -> context (Text, Expr)
+        evalBinding e = \case
           EList [ESymbol name, bindTo] -> (name, ) <$> locally e (eval bindTo)
           _                            -> error "evalBinding"
+        evalBindings :: Env -> [Expr] -> context Env
         evalBindings e = \case
           []       -> pure e
           (x : xs) -> evalBinding e x >>= \b -> evalBindings (insert b e) xs
@@ -60,7 +63,8 @@ eval = \case
 
   EList [ESymbol "define", ESymbol name, EList params, body] -> do
     funOrMacro name $ \addFn env ->
-      EFun \args -> locally (insert addFn (asEnv params args <> env)) (eval body)
+      EFun \args ->
+        locally (insert addFn (asEnv params args <> env)) (eval body)
 
   EList [ESymbol "lambda", EList params, body] -> do
     freeVars <- getEnv
@@ -73,11 +77,11 @@ eval = \case
      ELambda env g -> do
        args <- traverse eval xs
        locally env (g args)
-     e             -> error $ "not a function or a lambda: " <> show e
+     _             -> throwError $ CantApply f xs
 
   _ -> error "eval"
  where
-  funOrMacro :: Text -> ((Text, Expr) -> Env -> Expr) -> Context Expr
+  funOrMacro :: MonadContext m => Text -> ((Text, Expr) -> Env -> Expr) -> m Expr
   funOrMacro name execute = do
     env <- getEnv
     let addFn = (name, fun)       -- tying a tiny knot <3
@@ -85,7 +89,7 @@ eval = \case
     modifyContext (insert addFn)
     pure fun                      -- oh yeah
 
-unquote :: Expr -> Context [Expr]
+unquote :: MonadContext m => Expr -> m [Expr]
 unquote = \case
   EList [ESymbol "," , body] -> traverse eval [body]
   EList [ESymbol ",@", body] -> eval body >>= \case
@@ -97,8 +101,9 @@ unquote = \case
 asEnv :: [Expr] -> [Expr] -> Env
 asEnv = fromList .: zipWith (\(ESymbol a) b -> (a, b))
 
-truthy :: Expr -> Context Bool
+truthy :: MonadContext m => Expr -> m Bool
 truthy expr = eval expr <&> \case
   EBool False -> False
   ENil        -> False
   _           -> True
+{-# SPECIALISE truthy :: Expr -> Context Bool #-}
