@@ -46,7 +46,7 @@ readLisp fp = do
 
 withRead :: MonadIO m => a -> Text -> ([Expr] -> m a) -> m a
 withRead def str f = case read str of
-  Left err     -> def <$ liftIO (print err)
+  Left err     -> def <$ liftIO (putStrLn err)
   Right exprs  -> f exprs
 
 prelude :: String
