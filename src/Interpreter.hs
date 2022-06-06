@@ -6,11 +6,11 @@ module Interpreter (
 import Types
 import Util
 
-import Control.Monad.Except (throwError)
+import Control.Monad.Except (ExceptT, throwError)
+import Data.IORef (IORef)
 import Data.Map.Strict qualified as Map
 
 
-{-# SPECIALISE eval :: Expr -> Context Expr #-}
 eval :: forall context. MonadContext context => Expr -> context Expr
 eval = \case
   -- Trivial stuff
@@ -88,6 +88,7 @@ eval = \case
         fun   = execute addFn env
     modifyContext (insert addFn)
     pure fun                      -- oh yeah
+{-# SPECIALISE eval :: Expr -> ExceptT TholidError (ReaderT (IORef Env) IO) Expr #-}
 
 unquote :: MonadContext m => Expr -> m [Expr]
 unquote = \case
@@ -106,4 +107,3 @@ truthy expr = eval expr <&> \case
   EBool False -> False
   ENil        -> False
   _           -> True
-{-# SPECIALISE truthy :: Expr -> Context Bool #-}

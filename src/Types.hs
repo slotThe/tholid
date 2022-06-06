@@ -1,6 +1,5 @@
 module Types (
   Env (..),
-  Context (..),
   getEnv,
   locally,
   Expr (..),
@@ -20,7 +19,6 @@ import Data.Text qualified as T
 
 import Control.Exception (Exception)
 import Control.Monad.Except (MonadError)
-import Control.Monad.Trans.Except (ExceptT (..))
 import Data.IORef (IORef, modifyIORef', newIORef, readIORef)
 import Data.Kind (Type)
 import Data.Map.Strict (Map)
@@ -34,17 +32,8 @@ newtype Env = Env { unEnv :: Map Text Expr }
 type MonadContext :: (Type -> Type) -> Constraint
 type MonadContext m = (MonadError TholidError m, MonadReader (IORef Env) m, MonadIO m)
 
-newtype Context a = Context
-  { unContext :: ExceptT TholidError (ReaderT (IORef Env) IO) a }
-  deriving newtype
-    ( Functor, Applicative, Monad
-    , MonadReader (IORef Env)
-    , MonadIO
-    , MonadError TholidError
-    )
-
--- | Lift an 'IO' action into the 'Context' monad.
-io :: IO a -> Context a
+-- | Lift an 'IO' action into some 'MonadContext' context.
+io :: MonadContext m => IO a -> m a
 io = liftIO
 
 -- | Modify the current environment.
@@ -52,12 +41,12 @@ modifyContext :: MonadContext m => (Env -> Env) -> m ()
 modifyContext f = do
   r <- ask
   liftIO $ modifyIORef' r f
-{-# SPECIALISE modifyContext :: (Env -> Env) -> Context () #-}
+{-# INLINE modifyContext #-}
 
 -- | Return the current environment.
 getEnv :: MonadContext m => m Env
 getEnv = liftIO . readIORef =<< ask
-{-# SPECIALISE getEnv :: Context Env #-}
+{-# INLINE getEnv #-}
 
 -- | Insert a new element into an 'Env'.
 insert :: (Text, Expr) -> Env -> Env
@@ -68,7 +57,7 @@ locally :: MonadContext m => Env -> m Expr -> m Expr
 locally env evalThis = do
   e <- liftIO $ newIORef env
   local (const e) evalThis
-{-# SPECIALISE locally :: Env -> Context Expr -> Context Expr #-}
+{-# INLINE locally #-}
 
 -- | Get the head of a list of expressions, or nil.
 exprHead :: [Expr] -> Expr

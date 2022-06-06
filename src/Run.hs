@@ -16,14 +16,14 @@ import System.IO (hFlush, stdout)
 repl :: IO ()
 repl = do
   env <- builtin
-  void . flip runReaderT env . runExceptT . unContext $ do
+  void . flip runReaderT env . runExceptT $ do
     traverse_ eval =<< io (readLisp prelude)
     forever do
       io $ putStr "λ> " >> hFlush stdout
       l <- liftIO T.getLine
       liftIO $ withRead () l \exprs ->
         either print print
-          =<< (flip runReaderT env . runExceptT . unContext . eval $ head exprs)
+          =<< (flip runReaderT env . runExceptT . eval $ head exprs)
                 `catch` \(e :: SomeException) -> Right ENil <$ print e
 
 run :: Text -> IO Expr
@@ -37,9 +37,7 @@ runWith fp input = do
   go :: [Expr] -> IO Expr
   go exprs = do
     env <- builtin
-    (flip runReaderT env . runExceptT . unContext $ progn exprs) >>= \case
-       Left  e    -> throwIO e
-       Right expr -> pure expr
+    either throwIO pure <=< flip runReaderT env . runExceptT $ progn exprs
 
 readLisp :: FilePath -> IO [Expr]
 readLisp fp = do
