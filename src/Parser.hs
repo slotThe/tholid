@@ -15,39 +15,36 @@ import Text.Megaparsec ((<?>))
 
 type Parser = P.Parsec Void Text
 
+-- | Try to parse a bunch of lisp expression from the given string.
 read :: Text -> Either String [Expr]
 read inp = case P.parse (space *> pExpr `P.sepBy` space) "" inp of
   Left err    -> Left $ P.errorBundlePretty err
   Right exprs -> Right exprs
 
-inList :: Parser p -> Parser p
-inList p = symbol "(" *> p <* symbol ")"
-
+-- | Parse a lisp expression.
 pExpr :: Parser Expr
 pExpr = P.try pNil <|> pSymbol <|> pInt <|> pBool <|> pList <|> pUnquote
 
+-- | Parse @nil@.
 pNil :: Parser Expr
 pNil = takeSymbol >>= \s -> guard (s == "nil") $> ENil <?> "nil"
 
+-- | Parse an integer.
 pInt :: Parser Expr
 pInt = EInt <$> L.signed space L.decimal <?> "integer"
 
+-- | Parse a boolean value; either @#t@ or @#f@.
 pBool :: Parser Expr
 pBool = EBool <$> (symbol "#t" $> True <|> symbol "#f" $> False) <?> "boolean"
 
-pUnquote :: Parser Expr
-pUnquote = fmap EList $
-  (\a b -> [a, b]) <$> (   symbol ",@" $> ESymbol ",@"
-                       <|> symbol ","  $> ESymbol ","
-                       )
-                   <*> pExpr
-
+-- | Parse an arbitrary symbol.
 pSymbol :: Parser Expr
 pSymbol = ESymbol <$> lexeme (T.cons <$> start <*> takeSymbol) <?> "symbol"
  where
   start :: Parser Char
   start = P.letterChar <|> P.satisfy (`elem` ("+-_^*/<=>" :: String))
 
+-- | Parse a quoted list, either by a normal quote or by a backquote.
 pList :: Parser Expr
 pList = pQuote "'" "quote"        "list"
     <|> pQuote "`" "syntax-quote" "backquoted list"
@@ -60,6 +57,17 @@ pList = pQuote "'" "quote"        "list"
    where
     list :: Parser [Expr]
     list = inList (pExpr `P.sepBy` space)
+
+-- | Parse an unquote or a splice.
+pUnquote :: Parser Expr
+pUnquote = fmap EList $
+  (\a b -> [a, b]) <$> (   symbol ",@" $> ESymbol ",@"
+                       <|> symbol ","  $> ESymbol ","
+                       )
+                   <*> pExpr
+
+inList :: Parser p -> Parser p
+inList p = symbol "(" *> p <* symbol ")"
 
 takeSymbol :: Parser (P.Tokens Text)
 takeSymbol = P.takeWhileP Nothing $ \a -> not (isSpace a) && a /= '(' && a /= ')'
