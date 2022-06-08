@@ -9,6 +9,9 @@
 (define-syntax when (this body)
   `(if ,this (progn ,@body)))
 
+(define-syntax unless (this body)
+  `(if ,this nil ,body))
+
 ;; Arithmetic
 
 (define inc (x)
