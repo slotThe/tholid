@@ -13,6 +13,7 @@ import Control.Exception (SomeException, catch, throwIO)
 import Control.Monad.Except (runExceptT)
 import System.IO (hFlush, stdout)
 
+
 repl :: IO ()
 repl = do
   env <- builtin
@@ -20,8 +21,8 @@ repl = do
     traverse_ eval =<< io (readLisp prelude)
     forever do
       io $ putStr "λ> " >> hFlush stdout
-      l <- liftIO T.getLine
-      liftIO $ withRead () l \exprs ->
+      l <- io T.getLine
+      io $ withRead () l \exprs ->
         either print print
           =<< (flip runReaderT env . runExceptT . eval $ head exprs)
                 `catch` \(e :: SomeException) -> Right ENil <$ print e

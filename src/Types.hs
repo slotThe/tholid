@@ -40,12 +40,12 @@ io = liftIO
 modifyContext :: MonadContext m => (Env -> Env) -> m ()
 modifyContext f = do
   r <- ask
-  liftIO $ modifyIORef' r f
+  io $ modifyIORef' r f
 {-# INLINE modifyContext #-}
 
 -- | Return the current environment.
 getEnv :: MonadContext m => m Env
-getEnv = liftIO . readIORef =<< ask
+getEnv = io . readIORef =<< ask
 {-# INLINE getEnv #-}
 
 -- | Insert a new element into an 'Env'.
@@ -55,7 +55,7 @@ insert kv e = fromList [kv] <> e
 -- | Execute a computation with the given local environment.
 locally :: MonadContext m => Env -> m Expr -> m Expr
 locally env evalThis = do
-  e <- liftIO $ newIORef env
+  e <- io $ newIORef env
   local (const e) evalThis
 {-# INLINE locally #-}
 

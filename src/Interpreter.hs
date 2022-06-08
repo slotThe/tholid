@@ -80,15 +80,15 @@ eval = \case
      _             -> throwError $ CantApply f xs
 
   _ -> error "eval"
- where
-  funOrMacro :: MonadContext m => Text -> ((Text, Expr) -> Env -> Expr) -> m Expr
-  funOrMacro name execute = do
-    env <- getEnv
-    let addFn = (name, fun)       -- tying a tiny knot <3
-        fun   = execute addFn env
-    modifyContext (insert addFn)
-    pure fun                      -- oh yeah
 {-# SPECIALISE eval :: Expr -> ExceptT TholidError (ReaderT (IORef Env) IO) Expr #-}
+
+funOrMacro :: MonadContext m => Text -> ((Text, Expr) -> Env -> Expr) -> m Expr
+funOrMacro name execute = do
+  env <- getEnv
+  let addFn = (name, fun)       -- tying a tiny knot <3
+      fun   = execute addFn env
+  modifyContext (insert addFn)
+  pure fun                      -- oh yeah
 
 unquote :: MonadContext m => Expr -> m [Expr]
 unquote = \case
