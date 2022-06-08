@@ -1,15 +1,19 @@
 module Types (
+  -- * The underlying environment and context
   Env (..),
   getEnv,
+  MonadContext,
   locally,
-  Expr (..),
-  io,
   modifyContext,
+  io,
+
+  -- * Expressions
+  Expr (..),
   insert,
   exprHead,
+
   -- * Errors
-  MonadContext,
-  TholidError(..),
+  TholidError (..),
 ) where
 
 import Util
@@ -23,10 +27,17 @@ import Data.IORef (IORef, modifyIORef', newIORef, readIORef)
 import Data.Kind (Type)
 import Data.Map.Strict (Map)
 
+-----------------------------------------------------------------------
+-- Env and context
 
 -- | The current environment
 newtype Env = Env { unEnv :: Map Text Expr }
   deriving newtype (Semigroup, Monoid, IsList, Show)
+
+-- | Return the current environment.
+getEnv :: MonadContext m => m Env
+getEnv = io . readIORef =<< ask
+{-# INLINE getEnv #-}
 
 -- | Everything happens in a context!
 type MonadContext :: (Type -> Type) -> Constraint
@@ -43,15 +54,6 @@ modifyContext f = do
   io $ modifyIORef' r f
 {-# INLINE modifyContext #-}
 
--- | Return the current environment.
-getEnv :: MonadContext m => m Env
-getEnv = io . readIORef =<< ask
-{-# INLINE getEnv #-}
-
--- | Insert a new element into an 'Env'.
-insert :: (Text, Expr) -> Env -> Env
-insert kv e = fromList [kv] <> e
-
 -- | Execute a computation with the given local environment.
 locally :: MonadContext m => Env -> m Expr -> m Expr
 locally env evalThis = do
@@ -59,9 +61,8 @@ locally env evalThis = do
   local (const e) evalThis
 {-# INLINE locally #-}
 
--- | Get the head of a list of expressions, or nil.
-exprHead :: [Expr] -> Expr
-exprHead = fromMaybe ENil . listToMaybe
+-----------------------------------------------------------------------
+-- Expressions
 
 -- | A lisp expression.
 data Expr where
@@ -87,8 +88,16 @@ instance Show Expr where
     EFun{}    -> "≪function≫"
     EMacro{}  -> "≪macro≫"
 
+-- | Insert a new expression into an environment.
+insert :: (Text, Expr) -> Env -> Env
+insert kv e = fromList [kv] <> e
+
+-- | Get the head of a list of expressions, or nil.
+exprHead :: [Expr] -> Expr
+exprHead = fromMaybe ENil . listToMaybe
+
 -----------------------------------------------------------------------
---- Errors
+-- Errors
 
 data TholidError where
   BuiltinTypeError :: Show e => Text -> Text -> e -> TholidError
