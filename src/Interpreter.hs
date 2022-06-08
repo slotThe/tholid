@@ -31,28 +31,30 @@ eval = \case
   EList (ESymbol "if" : cond : then' : else') ->
     ifM (truthy cond) (eval then') (eval $ exprHead else')
 
-  EList (ESymbol "cond" : clauses) -> do
-    let evalCondition :: Expr -> context (Maybe Expr)
-        evalCondition = \case
-          EList [i, t] -> ifM (truthy i) (Just <$> eval t) (pure Nothing)
-          _            -> throwError $ CustomError "cond's arguments should be lists of two elements."
-        genCond :: [Expr] -> context Expr
-        genCond []       = pure ENil
-        genCond (x : xs) = evalCondition x >>= maybe (genCond xs) pure
-    genCond clauses
+  EList (ESymbol "cond" : clauses) -> genCond clauses
+   where
+    evalCondition :: Expr -> context (Maybe Expr)
+    evalCondition = \case
+      EList [i, t] -> ifM (truthy i) (Just <$> eval t) (pure Nothing)
+      _            -> throwError $ CustomError "cond's arguments should be lists of two elements."
+    genCond :: [Expr] -> context Expr
+    genCond = \case
+      []       -> pure ENil
+      (x : xs) -> evalCondition x >>= maybe (genCond xs) pure
 
   EList [ESymbol "let", EList bindings, body] -> do
-    env <- getEnv
-    let evalBinding :: Env -> Expr -> context (Text, Expr)
-        evalBinding e = \case
-          EList [ESymbol name, bindTo] -> (name, ) <$> locally e (eval bindTo)
-          _                            -> error "evalBinding"
-        evalBindings :: Env -> [Expr] -> context Env
-        evalBindings e = \case
-          []       -> pure e
-          (x : xs) -> evalBinding e x >>= \b -> evalBindings (insert b e) xs
+    env   <- getEnv
     binds <- evalBindings env bindings
     locally (binds <> env) (eval body)
+   where
+    evalBinding :: Env -> Expr -> context (Text, Expr)
+    evalBinding e = \case
+      EList [ESymbol name, bindTo] -> (name, ) <$> locally e (eval bindTo)
+      _                            -> error "evalBinding"
+    evalBindings :: Env -> [Expr] -> context Env
+    evalBindings e = \case
+      []       -> pure e
+      (x : xs) -> evalBinding e x >>= \b -> evalBindings (insert b e) xs
 
   -- Macros, functions, and applications
   EList [ESymbol "define-syntax", ESymbol name, EList params, body] -> do
@@ -72,11 +74,9 @@ eval = \case
       locally (asEnv params args <> freeVars) (eval body)
 
   EList (f : xs) -> eval f >>= \case
-     EMacro      g -> g =<< traverse eval xs
-     EFun        g -> g =<< traverse eval xs
-     ELambda env g -> do
-       args <- traverse eval xs
-       locally env (g args)
+     EMacro      g ->               g =<< traverse eval xs
+     EFun        g ->               g =<< traverse eval xs
+     ELambda env g -> locally env . g =<< traverse eval xs
      _             -> throwError $ CantApply f xs
 
   _ -> error "eval"
