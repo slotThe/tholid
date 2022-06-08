@@ -1,4 +1,8 @@
-module Run (repl, run, readLisp) where
+module Run (
+  repl,
+  run,
+  readLisp,
+) where
 
 import Builtin
 import Interpreter
@@ -10,22 +14,22 @@ import Util
 import Data.Text.IO qualified as T
 
 import Control.Exception (SomeException, catch, throwIO)
-import Control.Monad.Except (runExceptT)
+import Control.Monad.Except (ExceptT, runExceptT)
 import System.IO (hFlush, stdout)
 
 
 repl :: IO ()
 repl = do
   env <- builtin
-  void . flip runReaderT env . runExceptT $ do
+  void . runContext env $ do
     traverse_ eval =<< io (readLisp prelude)
     forever do
       io $ putStr "λ> " >> hFlush stdout
       l <- io T.getLine
       io $ withRead () l \exprs ->
         either print print
-          =<< (flip runReaderT env . runExceptT . eval $ head exprs)
-                `catch` \(e :: SomeException) -> Right ENil <$ print e
+          =<< catch (runContext env . eval $ head exprs)
+                    \(e :: SomeException) -> Right ENil <$ print e
 
 run :: Text -> IO Expr
 run = runWith prelude
@@ -38,7 +42,7 @@ runWith fp input = do
   go :: [Expr] -> IO Expr
   go exprs = do
     env <- builtin
-    either throwIO pure <=< flip runReaderT env . runExceptT $ progn exprs
+    either throwIO pure <=< runContext env $ progn exprs
 
 readLisp :: FilePath -> IO [Expr]
 readLisp fp = do
@@ -52,3 +56,6 @@ withRead def str f = case read str of
 
 prelude :: String
 prelude = "./lisp/prelude.scm"
+
+runContext :: env -> ExceptT e (ReaderT env m) a -> m (Either e a)
+runContext env = flip runReaderT env . runExceptT
