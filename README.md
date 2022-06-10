@@ -15,7 +15,7 @@ once in their life.
            (foldr f def (cdr xs)))))
 
   (define sum (xs)
-    (foldr + 0 '() xs)
+    (foldr + 0 xs)
 
   (sum '(1 2 3 4 5))
 ```
