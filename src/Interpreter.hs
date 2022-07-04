@@ -82,7 +82,8 @@ eval = \case
   _ -> error "eval"
 {-# SPECIALISE eval :: Expr -> ExceptT TholidError (ReaderT (IORef Env) IO) Expr #-}
 
-funOrMacro :: MonadContext m => Text -> ((Text, Expr) -> Env -> Expr) -> m Expr
+funOrMacro :: (ReaderContext m, MonadIO m)
+           => Text -> ((Text, Expr) -> Env -> Expr) -> m Expr
 funOrMacro name execute = do
   env <- getEnv
   let addFn = (name, fun)       -- tying a tiny knot <3

@@ -24,9 +24,9 @@ repl = do
   void . runContext env $ do
     traverse_ eval =<< io (readLisp prelude)
     forever do
-      io $ putStr "λ> " >> hFlush stdout
-      l <- io T.getLine
-      io $ withRead () l \exprs ->
+      putStr "λ> " >> hFlush stdout
+      l <- T.getLine
+      withRead () l \exprs ->
         either print print
           =<< catch (runContext env . eval $ head exprs)
                     \(e :: SomeException) -> Right ENil <$ print e
@@ -49,9 +49,9 @@ readLisp fp = do
   fileContents <- T.readFile fp
   withRead [ENil] fileContents pure
 
-withRead :: MonadIO m => a -> Text -> ([Expr] -> m a) -> m a
+withRead :: a -> Text -> ([Expr] -> IO a) -> IO a
 withRead def str f = case read str of
-  Left err     -> def <$ liftIO (putStrLn err)
+  Left err     -> def <$ putStrLn err
   Right exprs  -> f exprs
 
 prelude :: String

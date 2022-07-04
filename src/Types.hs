@@ -2,7 +2,7 @@ module Types (
   -- * The underlying environment and context
   Env (..),
   getEnv,
-  MonadContext,
+  MonadContext, ReaderContext, ErrorContext,
   locally,
   modifyContext,
   io,
@@ -35,27 +35,33 @@ newtype Env = Env { unEnv :: Map Text Expr }
   deriving newtype (Semigroup, Monoid, IsList, Show)
 
 -- | Return the current environment.
-getEnv :: MonadContext m => m Env
+getEnv :: (ReaderContext m, MonadIO m) => m Env
 getEnv = io . readIORef =<< ask
 {-# INLINE getEnv #-}
 
 -- | Everything happens in a context!
 type MonadContext :: (Type -> Type) -> Constraint
-type MonadContext m = (MonadError TholidError m, MonadReader (IORef Env) m, MonadIO m)
+type MonadContext m = (ErrorContext m, ReaderContext m, MonadIO m)
+
+type ReaderContext :: (Type -> Type) -> Constraint
+type ReaderContext m = MonadReader (IORef Env) m
+
+type ErrorContext :: (Type -> Type) -> Constraint
+type ErrorContext m = MonadError TholidError m
 
 -- | Lift an 'IO' action into some 'MonadContext' context.
-io :: MonadContext m => IO a -> m a
+io :: MonadIO m => IO a -> m a
 io = liftIO
 
 -- | Modify the current environment.
-modifyContext :: MonadContext m => (Env -> Env) -> m ()
+modifyContext :: (ReaderContext m, MonadIO m) => (Env -> Env) -> m ()
 modifyContext f = do
   r <- ask
   io $ modifyIORef' r f
 {-# INLINE modifyContext #-}
 
 -- | Execute a computation with the given local environment.
-locally :: MonadContext m => Env -> m Expr -> m Expr
+locally :: (ReaderContext m, MonadIO m) => Env -> m Expr -> m Expr
 locally env evalThis = do
   e <- io $ newIORef env
   local (const e) evalThis

@@ -7,7 +7,7 @@ import Interpreter
 import Types
 import Util
 
-import Control.Monad.Except (MonadError, throwError)
+import Control.Monad.Except (throwError)
 import Data.IORef (IORef, newIORef)
 
 
@@ -32,7 +32,7 @@ builtin = newIORef $ fromList
   , ("cons", EFun consList      )
   ]
 
-nAryOp :: forall a b m. MonadError TholidError m
+nAryOp :: forall a b m. ErrorContext m
        => Text -> (a -> b -> [Int] -> Int) -> b -> a -> [Expr] -> m Expr
 nAryOp opName cata def op xs = EInt . cata op def <$> traverse unNumber xs
  where
@@ -51,29 +51,29 @@ eq (EList xs)  (EList ys)  = do
   EBool . and <$> traverse (fmap (True ==) . truthy) res
 eq _ _ = pure $ EBool False
 
-lt :: MonadContext m => Text -> [Expr] -> m Bool
+lt :: ErrorContext m => Text -> [Expr] -> m Bool
 lt opName = go
  where
-  go :: MonadContext m => [Expr] -> m Bool
+  go :: ErrorContext m => [Expr] -> m Bool
   go = \case
     (EInt x : EInt y : xs) -> ((x < y) &&) <$> go xs
     [_]                    -> pure True
     []                     -> pure True
     e                      -> throwError $ BuiltinTypeError opName "(list of) number(s)" e
 
-car :: MonadContext m => [Expr] -> m Expr
+car :: ErrorContext m => [Expr] -> m Expr
 car = \case
   [EList (x : _)] -> pure x
   [EList{}]       -> pure ENil
   e               -> throwError $ BuiltinTypeError "car" "list" e
 
-cdr :: MonadContext m => [Expr] -> m Expr
+cdr :: ErrorContext m => [Expr] -> m Expr
 cdr = \case
   [EList (_ : xs)] -> pure (EList xs)
   [EList {}]       -> pure ENil
   e                -> throwError $ BuiltinTypeError "cdr" "list" e
 
-consList :: MonadContext m => [Expr] -> m Expr
+consList :: ErrorContext m => [Expr] -> m Expr
 consList = \case
   [a, EList xs] -> pure $ EList (a : xs)
   e             -> throwError $ BuiltinTypeError "cons" "element followed by list" e
