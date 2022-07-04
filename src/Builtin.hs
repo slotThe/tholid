@@ -51,15 +51,17 @@ eq (EList xs)  (EList ys)  = do
   EBool . and <$> traverse (fmap (True ==) . truthy) res
 eq _ _ = pure $ EBool False
 
-lt :: ErrorContext m => Text -> [Expr] -> m Bool
-lt opName = go
+lt :: forall m. ErrorContext m => Text -> [Expr] -> m Bool
+lt opName exprs = case (zipWith go <*> tail) exprs of
+  [] -> pure True
+  xs -> and <$> sequenceA xs
  where
-  go :: ErrorContext m => [Expr] -> m Bool
-  go = \case
-    (EInt x : EInt y : xs) -> ((x < y) &&) <$> go xs
-    [_]                    -> pure True
-    []                     -> pure True
-    e                      -> throwError $ BuiltinTypeError opName "(list of) number(s)" e
+  go :: Expr -> Expr -> m Bool
+  go (EInt x) (EInt y) = pure $ x < y
+  -- The next two are mostly for better error messages.
+  go e1       (EInt _) = throwError $ BuiltinTypeError opName "(list of) number(s)" e1
+  go (EInt _) e2       = throwError $ BuiltinTypeError opName "(list of) number(s)" e2
+  go e1       e2       = throwError $ BuiltinTypeError opName "(list of) number(s)" (EList [e1, e2])
 
 car :: ErrorContext m => [Expr] -> m Expr
 car = \case
