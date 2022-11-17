@@ -23,7 +23,7 @@ repl = do
   env <- builtin
   void . runContext env $ do
     traverse_ eval =<< io (readLisp prelude)
-    forever do
+    io $ forever do
       putStr "λ> " >> hFlush stdout
       l <- T.getLine
       withRead () l \exprs ->

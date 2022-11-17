@@ -24,13 +24,13 @@ import Data.Text qualified as T
 import Control.Exception (Exception)
 import Control.Monad.Except (MonadError)
 import Data.IORef (IORef, modifyIORef', newIORef, readIORef)
-import Data.Kind (Type)
 import Data.Map.Strict (Map)
 
 -----------------------------------------------------------------------
 -- Env and context
 
 -- | The current environment
+type Env :: Type
 newtype Env = Env { unEnv :: Map Text Expr }
   deriving newtype (Semigroup, Monoid, IsList, Show)
 
@@ -71,6 +71,7 @@ locally env evalThis = do
 -- Expressions
 
 -- | A lisp expression.
+type Expr :: Type
 data Expr where
   ENil    :: Expr
   EInt    :: Int -> Expr
@@ -105,6 +106,7 @@ exprHead = fromMaybe ENil . listToMaybe
 -----------------------------------------------------------------------
 -- Errors
 
+type TholidError :: Type
 data TholidError where
   BuiltinTypeError :: Show e => Text -> Text -> e -> TholidError
   SymbolNotInScope :: Text -> TholidError

@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.6.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d203ceb3f7893edb06f75ef9495eec4c04c563e218873e087891bc94d6e9d9ad
+-- hash: 1eaf1791f2826c07e20042cacbeb9e71b722e55708a0e4bde745368585369099
 
 name:           tholid
 version:        0.1.0
@@ -52,7 +52,7 @@ library
     , mtl
     , text
     , transformers
-  default-language: Haskell2010
+  default-language: GHC2021
 
 executable tholid
   main-is: Main.hs
@@ -85,4 +85,4 @@ executable tholid
     , text
     , tholid
     , transformers
-  default-language: Haskell2010
+  default-language: GHC2021

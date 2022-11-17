@@ -13,6 +13,7 @@ import Data.Char (isSpace)
 import Text.Megaparsec ((<?>))
 
 
+type Parser :: Type -> Type
 type Parser = P.Parsec Void Text
 
 -- | Try to parse a bunch of lisp expression from the given string.

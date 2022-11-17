@@ -7,14 +7,15 @@ module Util (
 ) where
 
 import Control.Applicative  as Exports
+import Control.Arrow        as Exports
 import Control.Monad.Reader as Exports
 import Data.Either          as Exports
 import Data.Foldable        as Exports hiding (toList)
 import Data.Functor         as Exports
+import Data.Kind            as Exports
 import Data.Maybe           as Exports
 import Data.Void            as Exports
 import GHC.Exts             as Exports
-import Control.Arrow        as Exports
 
 import Data.Text (Text)
 
